@@ -1,14 +1,7 @@
-    # #Movement
-    # char = getch()
-
-    # if (char == "a"):
-    #     headDirection = 'L'
-    # elif (char == "d"):
-    #     headDirection = 'R'
-    # elif (char == "w"):
-    #     headDirection = 'U'
-    # elif (char == "s"):
-    #     headDirection = 'D'
-    # elif (char == 't'):
-    #     snakeX.append(snakeX[len(snakeX) - 1] - 1)
-    #     snakeY.append(snakeY[len(snakeY) - 1] - 1)
+for i in range(len(SNAKE_X) - 1): #Subtract 1 as there is nothing ahead of the head
+            #Index backward
+            index = len(SNAKE_X) - i - 1 # subtract 1 as len is 1 based
+            print(index, i)
+            #Move the previous body segment to the segment ahead of it
+            SNAKE_X[index] = SNAKE_X[index - 1]
+            SNAKE_Y[index] = SNAKE_Y[index - 1]
