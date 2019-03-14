@@ -42,8 +42,8 @@ def MoveSnake(x, y):
         return True
 random.seed()
 def SpawnFood():
-    FOOD_X[0] = random.randrange(GRID_SIZE)
-    FOOD_Y[0] = random.randrange(GRID_SIZE)
+    FOOD_X[0] = random.randrange(1, GRID_SIZE - 1)
+    FOOD_Y[0] = random.randrange(1, GRID_SIZE - 1)
 SpawnFood()
 def FoodCollision():
     if SNAKE_X[0] == FOOD_X[0] and SNAKE_Y[0] == FOOD_Y[0]:
