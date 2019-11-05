@@ -6,17 +6,17 @@ WIDTH = 400
 HEIGHT = 400
 FPS = 8
 
-GRID_SIZE = 10
+GRID_SIZE = 6
 # GAME_GRID = []
 # for i in range(int(HEIGHT / GRID_SIZE)):
 #     GAME_GRID.append([0] * int(WIDTH / GRID_SIZE))
 
 SNAKE_X = [0] #TO get position: WIDTH / GRID_SIZE * [X]
 SNAKE_Y = [0]
-SNAKE_MOVE_DIR = 'D'
+SNAKE_MOVE_DIR = 'N'
 
-FOOD_X = [0]
-FOOD_Y = [0]
+FOOD_X = []
+FOOD_Y = []
 
 SCORE = 0
 def MoveSnake(x, y):
@@ -42,29 +42,51 @@ def MoveSnake(x, y):
         return True
 random.seed()
 def SpawnFood():
-    FOOD_X[0] = random.randrange(1, GRID_SIZE - 1)
-    FOOD_Y[0] = random.randrange(1, GRID_SIZE - 1)
+    # Disallow overlapping food
+    x = 0
+    y = 0
+    while True:
+        x = random.randrange(1, GRID_SIZE - 1)
+        y = random.randrange(1, GRID_SIZE - 1)
+   
+        if not x in FOOD_X and not y in FOOD_Y:
+           break
+
+    FOOD_X.append(x)
+    FOOD_Y.append(y)
+
 SpawnFood()
 def FoodCollision():
-    if SNAKE_X[0] == FOOD_X[0] and SNAKE_Y[0] == FOOD_Y[0]:
-        SpawnFood()
-        if SNAKE_MOVE_DIR == 'U':
-            SNAKE_X.append(SNAKE_X[len(SNAKE_X) - 1])
-            SNAKE_Y.append(SNAKE_Y[len(SNAKE_Y) - 1] + 1)
-        elif SNAKE_MOVE_DIR == 'D':
-            SNAKE_X.append(SNAKE_X[len(SNAKE_X) - 1])
-            SNAKE_Y.append(SNAKE_Y[len(SNAKE_Y) - 1] - 1)
-        elif SNAKE_MOVE_DIR == 'L':
-            SNAKE_X.append(SNAKE_X[len(SNAKE_X) - 1] + 1)
-            SNAKE_Y.append(SNAKE_Y[len(SNAKE_Y) - 1])
-        elif SNAKE_MOVE_DIR == 'R':
-            SNAKE_X.append(SNAKE_X[len(SNAKE_X) - 1] - 1)
-            SNAKE_Y.append(SNAKE_Y[len(SNAKE_Y) - 1])
-        global SCORE
-        SCORE += 1
-        return True
-    else:
-        return False
+    hit_food = False
+    for x in range(len(FOOD_X)):
+        for y in range(len(FOOD_Y)):
+            food_x = FOOD_X[x]
+            food_y = FOOD_Y[y]
+            if SNAKE_X[0] == food_x and SNAKE_Y[0] == food_y:
+                print(f"Ate food at {food_x} {food_y}")
+
+                del FOOD_X[x]
+                del FOOD_Y[y]
+                SpawnFood()
+
+                if SNAKE_MOVE_DIR == 'U':
+                    SNAKE_X.append(SNAKE_X[len(SNAKE_X) - 1])
+                    SNAKE_Y.append(SNAKE_Y[len(SNAKE_Y) - 1] + 1)
+                elif SNAKE_MOVE_DIR == 'D':
+                    SNAKE_X.append(SNAKE_X[len(SNAKE_X) - 1])
+                    SNAKE_Y.append(SNAKE_Y[len(SNAKE_Y) - 1] - 1)
+                elif SNAKE_MOVE_DIR == 'L':
+                    SNAKE_X.append(SNAKE_X[len(SNAKE_X) - 1] + 1)
+                    SNAKE_Y.append(SNAKE_Y[len(SNAKE_Y) - 1])
+                elif SNAKE_MOVE_DIR == 'R':
+                    SNAKE_X.append(SNAKE_X[len(SNAKE_X) - 1] - 1)
+                    SNAKE_Y.append(SNAKE_Y[len(SNAKE_Y) - 1])
+            
+                global SCORE
+                SCORE += 1
+                hit_food = True
+    
+    return hit_food
 #Init
 pygame.init()
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -74,6 +96,7 @@ CLOCK = pygame.time.Clock()
 #Game
 GAME_OVER = False
 RUNGAME = True
+FOOD_SPAWNED = False  # Whether an additional has been spawned
 def MainGame():
     global GAME_OVER
     global RUNGAME
@@ -104,9 +127,17 @@ def MainGame():
                     SNAKE_MOVE_DIR = 'R'
         #Update
         #GAME_SPRITES.update()
-        #Enlarge the screen if score is greater than area / 5
-        if SCORE > GRID_SIZE * GRID_SIZE / 10:
+        #Enlarge the screen if only more than 30% of screen is not snake
+        if SCORE > GRID_SIZE * GRID_SIZE * 0.3:
             GRID_SIZE += 1
+        # Space 1 additional food every multiples of 20
+        if len(SNAKE_X) % 20 == 0 and not FOOD_SPAWNED:
+            FOOD_SPAWNED = True
+            SpawnFood()
+        if len(SNAKE_X) % 20 != 0:  # Reset food spawned after the snake grows
+            FOOD_SPAWNED = False
+
+
         #Move the snake
         if SNAKE_MOVE_DIR == 'U':
             GAME_OVER = MoveSnake(0, -1)
@@ -142,21 +173,21 @@ def MainGame():
                                                 WIDTH / GRID_SIZE - 1, HEIGHT / GRID_SIZE - 1))  #-1 so you can see the body segments
         #Draw food
         for i in range(len(FOOD_X)):
-            pygame.draw.rect(SCREEN, (255, 0, 0), (WIDTH / GRID_SIZE * FOOD_X[0], HEIGHT / GRID_SIZE * FOOD_Y[0],
+            pygame.draw.rect(SCREEN, (255, 0, 0), (WIDTH / GRID_SIZE * FOOD_X[i], HEIGHT / GRID_SIZE * FOOD_Y[i],
                                                 WIDTH / GRID_SIZE - 5, HEIGHT / GRID_SIZE - 5))
         pygame.display.flip() #Draw, do this last as we are FLIPPing the display
     if GAME_OVER:
         print("Snake Died :(")
         #Reset the game
         GAME_OVER = False
-        SNAKE_MOVE_DIR = 'D'
+        SNAKE_MOVE_DIR = 'N'
         SNAKE_X = [0] #TO get position: WIDTH / GRID_SIZE * [X]
         SNAKE_Y = [0]
 
-        FOOD_X = [0]
-        FOOD_Y = [0]
+        FOOD_X = []
+        FOOD_Y = []
         SCORE = 0
-        GRID_SIZE = 10
+        GRID_SIZE = 6
         SpawnFood()
 #Keep running the game
 while RUNGAME:
